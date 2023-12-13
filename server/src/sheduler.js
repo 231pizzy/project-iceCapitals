@@ -32,10 +32,4 @@ export const calculateDaily = async () => {
   } catch (error) {
     console.error("Error calculating daily ROI:", error);
   }
-
-  // Schedule the function to run again after 24 hours
-  setTimeout(calculateDaily, 86400000);
 };
-
-// Start the initial calculation
-calculateDaily();

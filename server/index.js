@@ -6,16 +6,34 @@ import withdrawlRouter from "./src/routes/withdrawal.route.js";
 import walletRouter from "./src/routes/wallet.route.js";
 import cookieParser from "cookie-parser";
 import { calculateDaily } from "./src/sheduler.js";
+import schedule from "node-schedule";
 import path from "path";
 
+let jobScheduled = false; // Flag to track whether the job has been scheduled
+
+// Establish database connection
 db.sync()
   .then(() => {
     console.log("Database is connected");
-    calculateDaily();
+    scheduleDailyJob(); // Schedule the job when the database connection is established
   })
   .catch((err) => {
     console.log(err);
   });
+
+// Function to schedule the calculateDaily function
+function scheduleDailyJob() {
+  if (!jobScheduled) {
+    // Schedule the job only if it hasn't been scheduled before
+    const job = schedule.scheduleJob("0 0 * * *", () => {
+      console.log("Calculating daily ROI (every 24 hours)...");
+      calculateDaily();
+      console.log("Daily ROI calculation complete.");
+    });
+
+    jobScheduled = true; // Set the flag to true to indicate the job has been scheduled
+  }
+}
 const __dirname = path.resolve();
 
 const app = express();

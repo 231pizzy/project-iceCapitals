@@ -33,15 +33,15 @@ export default function SignIn() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (data.success === false) {
-        dispatch(signInFailure(data.message));
-        return;
+      if (!res.ok) {
+        // Check for error response from the server and display error toast
+        throw new Error(data.message || "Sign-in failed");
       }
       dispatch(signInSuccess(data));
       toast.success("You have successfully logged in, WELCOME!");
       navigate("/dashboard");
     } catch (error) {
-      toast.error("Invalid credential, Try again!");
+      toast.error(error.message || "Invalid credentials, Try again!");
       dispatch(signInFailure(error.message));
     }
   };

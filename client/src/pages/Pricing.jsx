@@ -63,7 +63,7 @@ export default function Pricing() {
                 </select>
               </div> */}
               <p className="text-4xl font-bold py-4 flex">
-                {symbol}500 - {symbol}99,999
+                {symbol}500 - {symbol}9,999
               </p>
             </div>
             <p className="text-3xl py-8 text-indigo-600">

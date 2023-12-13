@@ -3,20 +3,18 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const db = new Sequelize(
-  process.env.DB_NAME, //name of database
-  process.env.DB_USERNAME, //name of username
-  process.env.DB_PASSWORD, //db password
+  process.env.DB_URL, //name of database
 
   {
-    host: process.env.DB_HOST, //name of host
     port: 5432,
+    host: "localhost",
     dialect: "postgres",
     logging: false,
     dialectOptions: {
-      encrypt: true,
-      // ssl: {
-      //   rejectUnauthorized: true,
-      // },
+      ssl: {
+        require: true, // This will force SSL/TLS
+        rejectUnauthorized: false, // Avoids self-signed certificates error
+      },
     },
   }
 );

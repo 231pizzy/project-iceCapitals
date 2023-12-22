@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 import { calculateDaily } from "./src/sheduler.js";
 import schedule from "node-schedule";
 import path from "path";
+import fs from "fs";
 
 let jobScheduled = false; // Flag to track whether the job has been scheduled
 
@@ -26,13 +27,55 @@ function scheduleDailyJob() {
   if (!jobScheduled) {
     // Schedule the job only if it hasn't been scheduled before
     const job = schedule.scheduleJob("0 0 * * *", () => {
-      console.log("Calculating daily ROI (every 24 hours)...");
-      calculateDaily();
-      console.log("Daily ROI calculation complete.");
+      // Read the last run timestamp from the file
+      const lastRun = readLastRunTimestamp();
+
+      // Get the current date
+      const currentDate = new Date();
+
+      // Check if the scheduler has already run today
+      if (!isSameDay(lastRun, currentDate)) {
+        console.log("Calculating daily ROI (every 24 hours)...");
+        calculateDaily();
+        console.log("Daily ROI calculation complete.");
+
+        // Update the last run timestamp in the file
+        writeLastRunTimestamp(currentDate);
+      } else {
+        console.log("Scheduler already ran today. Skipping...");
+      }
     });
 
     jobScheduled = true; // Set the flag to true to indicate the job has been scheduled
   }
+}
+
+// Function to check if two dates are on the same day
+function isSameDay(date1, date2) {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
+}
+
+// Function to read the last run timestamp from a file
+function readLastRunTimestamp() {
+  try {
+    const timestamp = fs.readFileSync("lastRunTimestamp.txt", "utf8");
+    return new Date(Number(timestamp));
+  } catch (err) {
+    return new Date(0); // Return epoch time if file doesn't exist or cannot be read
+  }
+}
+
+// Function to write the last run timestamp to a file
+function writeLastRunTimestamp(timestamp) {
+  fs.writeFileSync(
+    "lastRunTimestamp.txt",
+    timestamp.getTime().toString(),
+    "utf8"
+  );
 }
 const __dirname = path.resolve();
 

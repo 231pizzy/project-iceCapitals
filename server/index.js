@@ -8,9 +8,7 @@ import cookieParser from "cookie-parser";
 import { calculateDaily } from "./src/sheduler.js";
 import schedule from "node-schedule";
 import path from "path";
-import fs from "fs";
-
-let jobScheduled = false; // Flag to track whether the job has been scheduled
+import User from "./src/models/users.js";
 
 // Establish database connection
 db.sync()
@@ -22,32 +20,37 @@ db.sync()
     console.log(err);
   });
 
-// Function to schedule the calculateDaily function
-function scheduleDailyJob() {
-  if (!jobScheduled) {
-    // Schedule the job only if it hasn't been scheduled before
-    const job = schedule.scheduleJob("0 0 * * *", () => {
-      // Read the last run timestamp from the file
-      const lastRun = readLastRunTimestamp();
-
-      // Get the current date
-      const currentDate = new Date();
-
-      // Check if the scheduler has already run today
-      if (!isSameDay(lastRun, currentDate)) {
-        console.log("Calculating daily ROI (every 24 hours)...");
-        calculateDaily();
-        console.log("Daily ROI calculation complete.");
-
-        // Update the last run timestamp in the file
-        writeLastRunTimestamp(currentDate);
-      } else {
-        console.log("Scheduler already ran today. Skipping...");
-      }
-    });
-
-    jobScheduled = true; // Set the flag to true to indicate the job has been scheduled
+async function readLastRunTimestamp() {
+  try {
+    // const lastUser = await User.findOne().sort({ updatedAt: -1 }); // Find the latest updated user
+    const lastUser = await User.findOne({}, {}, { sort: { updatedAt: -1 } });
+    return lastUser ? lastUser.updatedAt : new Date(0);
+  } catch (err) {
+    return new Date(0); // Return epoch time if data cannot be retrieved
   }
+}
+
+// Function to start the daily ROI calculation using node-cron
+function scheduleDailyJob() {
+  schedule.scheduleJob("0 0 * * *", async () => {
+    const lastRun = await readLastRunTimestamp(); // Read the last run timestamp from UserModel
+    console.log(lastRun);
+    const currentDate = new Date(); // Get the current date
+    console.log(currentDate);
+    const isSameDayAsLastRun = isSameDay(lastRun, currentDate); // Check if the current day matches last run day
+
+    if (!isSameDayAsLastRun) {
+      try {
+        console.log("Calculating daily ROI (every 24 hours)...");
+        await calculateDaily(); // Perform ROI calculation for the day
+        console.log("Daily ROI calculation complete.");
+      } catch (error) {
+        console.error("Error calculating daily ROI:", error);
+      }
+    } else {
+      console.log("Scheduler already ran today. Skipping...");
+    }
+  });
 }
 
 // Function to check if two dates are on the same day
@@ -59,31 +62,13 @@ function isSameDay(date1, date2) {
   );
 }
 
-// Function to read the last run timestamp from a file
-function readLastRunTimestamp() {
-  try {
-    const timestamp = fs.readFileSync("lastRunTimestamp.txt", "utf8");
-    return new Date(Number(timestamp));
-  } catch (err) {
-    return new Date(0); // Return epoch time if file doesn't exist or cannot be read
-  }
-}
-
-// Function to write the last run timestamp to a file
-function writeLastRunTimestamp(timestamp) {
-  fs.writeFileSync(
-    "lastRunTimestamp.txt",
-    timestamp.getTime().toString(),
-    "utf8"
-  );
-}
 const __dirname = path.resolve();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.listen(4000, () => {
+app.listen(4001, () => {
   console.log("Server is running on port 4000");
 });
 
@@ -107,3 +92,27 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+// function scheduleDailyJob() {
+//   if (!jobScheduled) {
+//     const job = schedule.scheduleJob("0 0 * * *", async () => {
+//       console.log("Calculating daily ROI (every 24 hours)...");
+//       const lastRun = readLastRunTimestamp();
+//       const currentDate = new Date();
+
+//       if (!isSameDay(lastRun, currentDate)) {
+//         try {
+//           await calculateDaily();
+//           writeLastRunTimestamp(currentDate);
+//           console.log("Daily ROI calculation complete.");
+//         } catch (error) {
+//           console.error("Error calculating daily ROI:", error);
+//         }
+//       } else {
+//         console.log("Scheduler already ran today. Skipping...");
+//       }
+//     });
+
+//     jobScheduled = true; // Set the flag to true to indicate the job has been scheduled
+//   }
+// }

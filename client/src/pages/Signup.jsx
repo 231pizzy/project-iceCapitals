@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 export default function Signup() {
   const [formData, setFormData] = useState({});
-  const [setError] = useState(null);
+  // const [setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -22,24 +22,24 @@ export default function Signup() {
       const res = await fetch("/api/user/signup", {
         method: "POST",
         headers: {
-          "content-Type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-      if (data.success === false) {
+
+      if (res.ok) {
+        toast.success("Account created successfully!");
+        navigate("/sign-in");
         setLoading(false);
-        setError(data.message);
-        return;
+        // setError(null);
+      } else {
+        const data = await res.json();
+        throw new Error(data.message || "Sign-in failed");
       }
-      setLoading(false);
-      setError(null);
-      toast.success("Account created successfully!");
-      navigate("/sign-in");
     } catch (error) {
-      toast.error("Error signing up,fill the form properly and try again");
+      console.log("Error:", error); // Log the error message or data here
+      toast.error(error.message || "Error signing up, Try again.");
       setLoading(false);
-      setError(error.message);
     }
   };
 

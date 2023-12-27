@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   signInStart,
   signInSuccess,
@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
-  const { loading } = useSelector((state) => state.user);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -25,6 +25,7 @@ export default function SignIn() {
     e.preventDefault();
     try {
       dispatch(signInStart);
+      setLoading(true);
       const res = await fetch("/api/user/signin", {
         method: "POST",
         headers: {
@@ -40,9 +41,11 @@ export default function SignIn() {
       dispatch(signInSuccess(data));
       toast.success("You have successfully logged in, WELCOME!");
       navigate("/dashboard");
+      setLoading(false);
     } catch (error) {
       toast.error(error.message || "Invalid credentials, Try again!");
       dispatch(signInFailure(error.message));
+      setLoading(false);
     }
   };
 

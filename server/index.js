@@ -32,25 +32,28 @@ async function readLastRunTimestamp() {
 
 // Function to start the daily ROI calculation using node-cron
 function scheduleDailyJob() {
-  schedule.scheduleJob("0 0 * * *", async () => {
-    const lastRun = await readLastRunTimestamp(); // Read the last run timestamp from UserModel
-    console.log(lastRun);
-    const currentDate = new Date(); // Get the current date
-    console.log(currentDate);
-    const isSameDayAsLastRun = isSameDay(lastRun, currentDate); // Check if the current day matches last run day
+  schedule.scheduleJob(
+    { hour: 17, minute: 30, tz: "America/Los_Angeles" },
+    async () => {
+      const lastRun = await readLastRunTimestamp(); // Read the last run timestamp from UserModel
+      console.log(lastRun);
+      const currentDate = new Date(); // Get the current date
+      console.log(currentDate);
+      const isSameDayAsLastRun = isSameDay(lastRun, currentDate); // Check if the current day matches last run day
 
-    if (!isSameDayAsLastRun) {
-      try {
-        console.log("Calculating daily ROI (every 24 hours)...");
-        await calculateDaily(); // Perform ROI calculation for the day
-        console.log("Daily ROI calculation complete.");
-      } catch (error) {
-        console.error("Error calculating daily ROI:", error);
+      if (!isSameDayAsLastRun) {
+        try {
+          console.log("Calculating daily ROI (every 24 hours)...");
+          await calculateDaily(); // Perform ROI calculation for the day
+          console.log("Daily ROI calculation complete.");
+        } catch (error) {
+          console.error("Error calculating daily ROI:", error);
+        }
+      } else {
+        console.log("Scheduler already ran today. Skipping...");
       }
-    } else {
-      console.log("Scheduler already ran today. Skipping...");
     }
-  });
+  );
 }
 
 // Function to check if two dates are on the same day
@@ -68,7 +71,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.listen(4000, () => {
+app.listen(4001, () => {
   console.log("Server is running on port 4000");
 });
 

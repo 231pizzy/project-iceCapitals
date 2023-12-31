@@ -33,7 +33,7 @@ async function readLastRunTimestamp() {
 // Function to start the daily ROI calculation using node-cron
 function scheduleDailyJob() {
   schedule.scheduleJob(
-    { hour: 17, minute: 30, tz: "America/Los_Angeles" },
+    { hour: 21, minute: 5, tz: "America/Los_Angeles" },
     async () => {
       const lastRun = await readLastRunTimestamp(); // Read the last run timestamp from UserModel
       console.log(lastRun);
